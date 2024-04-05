@@ -1,0 +1,59 @@
+{
+  "name": "redux-offline-sync",
+  "version": "0.0.1",
+  "description": "-",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "src",
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "test": "jest",
+    "build": "tsc --build"
+  },
+  "keywords": [
+    "react",
+    "hooks",
+    "geometry",
+    "polygon",
+    "2D",
+    "UI",
+    "animation"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/TkTioNG/redux-offline-sync.git"
+  },
+  "bugs": {
+    "url": "https://github.com/TkTioNG/redux-offline-sync/issues"
+  },
+  "homepage": "https://github.com/TkTioNG/redux-offline-sync",
+  "author": "TkTioNG",
+  "peerDependencies": {
+    "@types/react": ">=18",
+    "react": ">=18",
+    "react-dom": ">=18",
+    "redux": "^5.0.1"
+  },
+  "peerDependenciesMeta": {
+    "@types/react": {
+      "optional": true
+    },
+    "react-dom": {
+      "optional": true
+    }
+  },
+  "license": "MIT",
+  "sideEffects": false,
+  "devDependencies": {
+    "redux": "^5.0.1"
+  }
+}

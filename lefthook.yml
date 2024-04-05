@@ -1,0 +1,14 @@
+pre-commit:
+  parallel: true
+  commands:
+    lint:
+      glob: '*.{js,ts,jsx,tsx}'
+      run: pnpm lint {staged_files} --fix
+    types:
+      glob: '*.{js,ts, jsx, tsx}'
+      run: pnpm typecheck
+commit-msg:
+  parallel: true
+  commands:
+    commitlint:
+      run: pnpm commitlint --edit
