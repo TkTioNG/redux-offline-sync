@@ -1,50 +1,55 @@
 import { busy, scheduleRetry } from './actions';
 import { JS_ERROR } from './constants';
-import type {
-  Config,
-  OfflineAction,
-  ResultAction,
-  DefaultAction
-} from './types';
+import type { Config, OfflineAction, ResultAction } from './types';
 
 type CompleteSuccessResult = {
-  success: true,
-  payload: {}
+  success: true;
+  payload: any;
 };
 
 type CompleteFailResult = {
-  success: false,
-  payload?: Error
+  success: false;
+  payload?: Error;
 };
 
+interface CompleteAction {
+  type: string;
+  offlineSyncMeta: {
+    offlineAction: OfflineAction;
+  };
+}
+
 const complete = (
-  action: DefaultAction | ResultAction,
+  action: CompleteAction /** @todo Check DefaultAction | ResultAction */,
   result: CompleteSuccessResult | CompleteFailResult,
   offlineAction: OfflineAction,
   config: Config
 ): ResultAction => {
   const { resolveAction, rejectAction } = config.offlineActionTracker;
   if (result.success) {
-    resolveAction(offlineAction.offlineSyncMeta.transaction, result.payload);
+    resolveAction(offlineAction.offlineSyncMeta.syncUuid, result.payload);
   } else if (result.payload) {
-    rejectAction(offlineAction.offlineSyncMeta.transaction, result.payload);
+    rejectAction(offlineAction.offlineSyncMeta.syncUuid, result.payload);
   }
-  return (({
+  return {
     ...action,
     payload: result.payload,
-    offlineSyncMeta: { ...action.offlineSyncMeta, success: result.success, completed: true }
-  }: any): ResultAction);
+    offlineSyncMeta: {
+      ...action.offlineSyncMeta,
+      success: result.success,
+      completed: true,
+    },
+  };
 };
 
-const handleJsError = (error: Error): ResultAction =>
-  (({
-    type: JS_ERROR,
-    offlineSyncMeta: { error, success: false, completed: true }
-  }: any): ResultAction);
+const handleJsError = (error: Error | undefined | unknown): ResultAction => ({
+  type: JS_ERROR,
+  offlineSyncMeta: { error, success: false, completed: true },
+});
 
 const send = (
   action: OfflineAction,
-  dispatch: any => any,
+  dispatch: (...any: any[]) => any,
   config: Config,
   retries: number = 0
 ) => {
@@ -52,13 +57,15 @@ const send = (
   dispatch(busy(true));
   return config
     .effect(offlineSyncMetadata.effect, action)
-    .then(result => {
-      const commitAction =
-        offlineSyncMetadata.commit ||
-        ({
-          ...config.defaultCommit,
-          offlineSyncMeta: { ...config.defaultCommit.offlineSyncMeta, offlineAction: action }
-        }: DefaultAction);
+    .then((result) => {
+      const commitAction = {
+        type: `${action.type}_COMMIT`,
+        // ...config.defaultCommit,
+        offlineSyncMeta: {
+          // ...config.defaultCommit.offlineSyncMeta,
+          offlineAction: action,
+        },
+      };
       try {
         return dispatch(
           complete(
@@ -72,13 +79,15 @@ const send = (
         return dispatch(handleJsError(error));
       }
     })
-    .catch(async error => {
-      const rollbackAction =
-        offlineSyncMetadata.rollback ||
-        ({
-          ...config.defaultRollback,
-          offlineSyncMeta: { ...config.defaultRollback.offlineSyncMeta, offlineAction: action }
-        }: DefaultAction);
+    .catch(async (error) => {
+      const rollbackAction = {
+        type: `${action.type}_ROLLBACK`,
+        // ...config.defaultRollback,
+        offlineSyncMeta: {
+          // ...config.defaultRollback.offlineSyncMeta,
+          offlineAction: action,
+        },
+      };
 
       // discard
       let mustDiscard = true;

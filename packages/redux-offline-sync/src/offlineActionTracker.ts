@@ -1,25 +1,36 @@
-const subscriptions = {};
+import { Config } from './types';
 
-function registerAction(transaction) {
+const subscriptions: Record<
+  string,
+  { resolve: (value: any) => void; reject: (error: any) => void }
+> = {};
+
+function registerAction(syncUuid: string) {
   return new Promise((resolve, reject) => {
-    subscriptions[transaction] = { resolve, reject };
+    subscriptions[syncUuid] = { resolve, reject };
   });
 }
 
-function resolveAction(transaction, value) {
-  const subscription = subscriptions[transaction];
+function resolveAction(syncUuid: string, value: any) {
+  const subscription = subscriptions[syncUuid];
   if (subscription) {
     subscription.resolve(value);
-    delete subscriptions[transaction];
+    delete subscriptions[syncUuid];
   }
 }
 
-function rejectAction(transaction, error) {
-  const subscription = subscriptions[transaction];
+function rejectAction(syncUuid: string, error: any) {
+  const subscription = subscriptions[syncUuid];
   if (subscription) {
     subscription.reject(error);
-    delete subscriptions[transaction];
+    delete subscriptions[syncUuid];
   }
 }
 
-export { registerAction, resolveAction, rejectAction };
+const offlineActionTracker = {
+  registerAction,
+  resolveAction,
+  rejectAction,
+} as Config['offlineActionTracker'];
+
+export default offlineActionTracker;

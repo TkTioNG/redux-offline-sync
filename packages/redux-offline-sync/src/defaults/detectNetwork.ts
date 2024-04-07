@@ -3,7 +3,7 @@ const handle = (callback, online) => {
   if (window.requestAnimationFrame) {
     window.requestAnimationFrame(() => callback({ online }));
   } else {
-    setTimeout(() => callback({ online }), 0);
+    setTimeout(() => callback({ netInfo: { online } }), 0);
   }
 };
 

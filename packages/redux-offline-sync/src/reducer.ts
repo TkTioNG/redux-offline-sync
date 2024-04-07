@@ -1,12 +1,11 @@
+import { Action, Reducer, UnknownAction } from 'redux';
+import { v4 as uuidv4 } from 'uuid';
 import type {
-  OfflineStatusChangeAction,
-  OfflineScheduleRetryAction,
-  PersistRehydrateAction,
   OfflineSyncState,
   ResultAction,
   Config,
-  OfflineBusyAction,
   OfflineAction,
+  PossibleOfflineSyncAction,
 } from './types';
 import {
   OFFLINE_STATUS_CHANGED,
@@ -16,11 +15,10 @@ import {
   RESET_STATE,
   PERSIST_REHYDRATE,
 } from './constants';
-import { Action, Reducer, UnknownAction } from 'redux';
 
 export const initialState: OfflineSyncState = {
   busy: false,
-  lastTransaction: 0,
+  lastSyncUuid: undefined,
   outbox: [],
   retryCount: 0,
   retryScheduled: false,
@@ -37,14 +35,7 @@ type Enqueue = Config['queue']['enqueue'];
 export const buildOfflineUpdater = (dequeue: Dequeue, enqueue: Enqueue) =>
   function offlineSyncUpdater(
     state: OfflineSyncState | undefined = initialState,
-    action:
-      | OfflineStatusChangeAction
-      | OfflineScheduleRetryAction
-      | OfflineBusyAction
-      | ResultAction
-      | OfflineAction
-      | PersistRehydrateAction
-      | UnknownAction
+    action: PossibleOfflineSyncAction
   ): OfflineSyncState {
     // Update online/offline status
     if (action.type === OFFLINE_STATUS_CHANGED) {
@@ -91,15 +82,15 @@ export const buildOfflineUpdater = (dequeue: Dequeue, enqueue: Enqueue) =>
     // Add offline actions to queue
     if (action.offlineSyncMeta) {
       if ((action as OfflineAction).offlineSyncMeta.offline) {
-        const transaction = state.lastTransaction + 1;
+        const syncUuid = uuidv4();
         const stamped = {
           ...action,
-          offlineSyncMeta: { ...action.offlineSyncMeta, transaction },
+          offlineSyncMeta: { ...action.offlineSyncMeta, syncUuid },
         } as OfflineAction;
         const offline = state;
         return {
           ...state,
-          lastTransaction: transaction,
+          lastSyncUuid: syncUuid,
           outbox: enqueue(offline.outbox, stamped, { offline }),
         };
       }

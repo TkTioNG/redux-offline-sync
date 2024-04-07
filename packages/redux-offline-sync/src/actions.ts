@@ -4,7 +4,7 @@ import {
   OFFLINE_COMPLETE_RETRY,
   OFFLINE_BUSY,
 } from './constants';
-import { NetInfo } from './types';
+import type { NetInfo } from './types';
 
 export const updateNetworkStatus = (netInfo: NetInfo) => {
   return {

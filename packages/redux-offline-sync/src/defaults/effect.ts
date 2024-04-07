@@ -1,8 +1,6 @@
-// @flow
-
 import type { OfflineAction } from '../types';
 
-export function NetworkError(response: {} | string, status: number) {
+export function NetworkError(response: any | string, status: number) {
   this.name = 'NetworkError';
   this.status = status;
   this.response = response;
@@ -31,7 +29,7 @@ const getResponseBody = (res: any): Promise<{} | string> => {
 };
 
 export const getHeaders = (headers: {
-  [string]: string,
+  [string]: string;
 }): { [string]: string } => {
   const {
     'Content-Type': contentTypeCapitalized,

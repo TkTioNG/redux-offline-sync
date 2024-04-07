@@ -3,7 +3,7 @@ pre-commit:
   commands:
     lint:
       glob: '*.{js,ts,jsx,tsx}'
-      run: pnpm lint {staged_files} --fix
+      run: pnpm eslint {staged_files} --fix
     types:
       glob: '*.{js,ts, jsx, tsx}'
       run: pnpm typecheck

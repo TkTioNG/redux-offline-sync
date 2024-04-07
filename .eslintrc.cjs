@@ -26,6 +26,7 @@ module.exports = {
     'jsx-a11y/role-supports-aria-props': 'warn',
     'react/jsx-no-target-blank': 'off',
     'prettier/prettier': 'error',
+    '@typescript-eslint/no-explicit-any': 'warn',
   },
   parserOptions: {
     requireConfigFile: false,

@@ -1,8 +1,9 @@
 import type { Config } from './types';
-
-const defaultConfig: Config = {};
+import defaults from './defaults';
+import offlineActionTracker from './offlineActionTracker';
 
 export const applyDefaults = (config: Partial<Config> = {}): Config => ({
-  ...defaultConfig,
+  ...defaults,
   ...config,
+  offlineActionTracker: offlineActionTracker,
 });

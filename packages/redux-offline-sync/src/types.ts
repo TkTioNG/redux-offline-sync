@@ -1,3 +1,4 @@
+import type { UnknownAction } from 'redux';
 import {
   OFFLINE_STATUS_CHANGED,
   OFFLINE_SCHEDULE_RETRY,
@@ -12,7 +13,7 @@ export type ResultAction = {
     // offline?: any;
     success: boolean;
     completed: boolean;
-    error?: Error;
+    error?: Error | unknown;
   };
 };
 
@@ -29,7 +30,7 @@ export type OfflineAction = {
   type: string;
   payload?: any;
   offlineSyncMeta: {
-    transaction: number;
+    syncUuid: string;
     offline: OfflineMetadata;
   };
 };
@@ -50,6 +51,9 @@ export type OfflineStatusChangeAction = {
 
 export type OfflineScheduleRetryAction = {
   type: typeof OFFLINE_SCHEDULE_RETRY;
+  payload: {
+    delay: number;
+  };
   offlineSyncMeta: undefined;
 };
 
@@ -61,11 +65,20 @@ export type OfflineBusyAction = {
   offlineSyncMeta: undefined;
 };
 
+export type PossibleOfflineSyncAction =
+  | OfflineStatusChangeAction
+  | OfflineScheduleRetryAction
+  | OfflineBusyAction
+  | ResultAction
+  | OfflineAction
+  | PersistRehydrateAction
+  | UnknownAction;
+
 export type Outbox = Array<OfflineAction>;
 
 export type OfflineSyncState = {
   busy: boolean;
-  lastTransaction: number;
+  lastSyncUuid?: string;
   outbox: Outbox;
   netInfo: NetInfo;
   retryCount: number;
@@ -88,17 +101,9 @@ export type NetworkCallback = (result: NetInfo) => void;
 
 export interface Config {
   detectNetwork: (callback: NetworkCallback) => void;
-  persist: (store: any, options: {}, callback: () => void) => any;
   effect: (effect: any, action: OfflineAction) => Promise<any>;
   retry: (action: OfflineAction, retries: number) => number | null | undefined;
   discard: (error: any, action: OfflineAction, retries: number) => boolean;
-  persistOptions: any;
-  persistCallback: (callback: any) => any;
-  persistAutoRehydrate: (config?: {}) => (next: any) => any;
-  offlineStateLens: (state: any) => {
-    get: OfflineSyncState;
-    set: (offlineState?: OfflineSyncState) => any;
-  };
   queue: {
     enqueue: (
       array: Array<OfflineAction>,
@@ -117,9 +122,10 @@ export interface Config {
     ) => OfflineAction;
   };
   offlineActionTracker: {
-    registerAction: () => Promise<any> | (() => void);
-    resolveAction: () => void | (() => void);
-    rejectAction: () => void | (() => void);
+    registerAction: (
+      syncUuid: string | undefined
+    ) => Promise<any> | (() => void);
+    resolveAction: (syncUuid: string, payload: any) => void | (() => void);
+    rejectAction: (syncUuid: string, payload: any) => void | (() => void);
   };
-  rehydrate?: boolean;
 }

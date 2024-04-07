@@ -1,7 +1,6 @@
-/* eslint no-underscore-dangle: 0 */
-import { AppState, NetInfo } from 'react-native'; // eslint-disable-line
+import { AppState, NetInfo } from 'react-native';
 
-class LegacyDetectNetwork {
+class DetectNetwork {
   constructor(callback) {
     this._reach = null;
     this._isConnected = null;
@@ -16,9 +15,8 @@ class LegacyDetectNetwork {
   /**
    * Check props for changes
    * @param {string} reach - connection reachability.
-   *     - iOS: [none, wifi, cell, unknown]
-   *     - Android: [NONE, BLUETOOTH, DUMMY, ETHERNET, MOBILE, MOBILE_DUN, MOBILE_HIPRI,
-   *                MOBILE_MMS, MOBILE_SUPL, VPN, WIFI, WIMAX, UNKNOWN]
+   *     - Cross-platform: [none, wifi, cellular, unknown]
+   *     - Android: [bluetooth, ethernet, wimax]
    * @returns {boolean} - Whether the connection reachability or the connection props have changed
    * @private
    */
@@ -35,9 +33,8 @@ class LegacyDetectNetwork {
   /**
    * Sets the connection reachability prop
    * @param {string} reach - connection reachability.
-   *     - iOS: [none, wifi, cell, unknown]
-   *     - Android: [NONE, BLUETOOTH, DUMMY, ETHERNET, MOBILE, MOBILE_DUN, MOBILE_HIPRI,
-   *                MOBILE_MMS, MOBILE_SUPL, VPN, WIFI, WIMAX, UNKNOWN]
+   *     - Cross-platform: [none, wifi, cellular, unknown]
+   *     - Android: [bluetooth, ethernet, wimax]
    * @returns {void}
    * @private
    */
@@ -49,13 +46,12 @@ class LegacyDetectNetwork {
   /**
    * Gets the isConnected prop depending on the connection reachability's value
    * @param {string} reach - connection reachability.
-   *     - iOS: [none, wifi, cell, unknown]
-   *     - Android: [NONE, BLUETOOTH, DUMMY, ETHERNET, MOBILE, MOBILE_DUN, MOBILE_HIPRI,
-   *                MOBILE_MMS, MOBILE_SUPL, VPN, WIFI, WIMAX, UNKNOWN]
+   *     - Cross-platform: [none, wifi, cellular, unknown]
+   *     - Android: [bluetooth, ethernet, wimax]
    * @returns {void}
    * @private
    */
-  _getConnection = (reach) => reach !== 'NONE' && reach !== 'UNKNOWN';
+  _getConnection = (reach) => reach !== 'none' && reach !== 'unknown';
 
   /**
    * Sets the isConnectionExpensive prop
@@ -90,25 +86,23 @@ class LegacyDetectNetwork {
    * @private
    */
   _init = async () => {
-    const reach = await NetInfo.fetch();
+    const connectionInfo = await NetInfo.getConnectionInfo();
     if (this._shouldInitUpdateReach) {
-      this._update(reach);
+      this._update(connectionInfo.type);
     }
   };
 
   /**
    * Check changes on props and store and dispatch if neccesary
    * @param {string} reach - connection reachability.
-   *     - iOS: [none, wifi, cell, unknown]
-   *     - Android: [NONE, BLUETOOTH, DUMMY, ETHERNET, MOBILE, MOBILE_DUN, MOBILE_HIPRI,
-   *                MOBILE_MMS, MOBILE_SUPL, VPN, WIFI, WIMAX, UNKNOWN]
+   *     - Cross-platform: [none, wifi, cellular, unknown]
+   *     - Android: [bluetooth, ethernet, wimax]
    * @returns {void}
    * @private
    */
   _update = (reach) => {
-    const normalizedReach = reach.toUpperCase();
-    if (this._hasChanged(normalizedReach)) {
-      this._setReach(normalizedReach);
+    if (this._hasChanged(reach)) {
+      this._setReach(reach);
       this._dispatch();
     }
   };
@@ -119,14 +113,14 @@ class LegacyDetectNetwork {
    * @private
    */
   _addListeners() {
-    NetInfo.addEventListener('change', (reach) => {
+    NetInfo.addEventListener('connectionChange', (connectionInfo) => {
       this._setShouldInitUpdateReach(false);
-      this._update(reach);
+      this._update(connectionInfo.type);
     });
     AppState.addEventListener('change', async () => {
       this._setShouldInitUpdateReach(false);
-      const reach = await NetInfo.fetch();
-      this._update(reach);
+      const connectionInfo = await NetInfo.getConnectionInfo();
+      this._update(connectionInfo.type);
     });
   }
 
@@ -139,8 +133,8 @@ class LegacyDetectNetwork {
   _dispatch = async () => {
     await this._setIsConnectionExpensive();
     this._callback({
-      online: this._isConnected,
       netInfo: {
+        online: this._isConnected,
         isConnectionExpensive: this._isConnectionExpensive,
         reach: this._reach,
       },
@@ -148,4 +142,4 @@ class LegacyDetectNetwork {
   };
 }
 
-export default LegacyDetectNetwork;
+export default (callback) => new DetectNetwork(callback);
