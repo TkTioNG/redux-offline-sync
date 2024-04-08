@@ -31,14 +31,14 @@ export type OfflineAction = {
   payload?: any;
   offlineSyncMeta: {
     syncUuid: string;
-    offline: OfflineMetadata;
+    offlineSync: OfflineMetadata;
   };
 };
 
 export type NetInfo = {
-  online: boolean;
+  type?: string | null;
+  isConnected: boolean;
   isConnectionExpensive?: boolean;
-  reach?: string;
 };
 
 export type OfflineStatusChangeAction = {
@@ -88,16 +88,16 @@ export type OfflineSyncState = {
 export type PersistRehydrateAction = {
   type: typeof PERSIST_REHYDRATE;
   payload: {
-    offline: OfflineSyncState;
+    offlineSync: OfflineSyncState;
   };
   offlineSyncMeta: undefined;
 };
 
 export type AppState = {
-  offline: OfflineSyncState;
+  offlineSync: OfflineSyncState;
 };
 
-export type NetworkCallback = (result: NetInfo) => void;
+export type NetworkCallback = (netInfo: NetInfo) => void;
 
 export interface Config {
   detectNetwork: (callback: NetworkCallback) => void;
@@ -108,17 +108,17 @@ export interface Config {
     enqueue: (
       array: Array<OfflineAction>,
       item: OfflineAction,
-      context: { offline: OfflineSyncState }
+      context: { offlineSync: OfflineSyncState }
     ) => Array<OfflineAction>;
     dequeue: (
       array: Array<OfflineAction>,
       item: ResultAction,
-      context: { offline: OfflineSyncState }
+      context: { offlineSync: OfflineSyncState }
     ) => Array<OfflineAction>;
     peek: (
       array: Array<OfflineAction>,
       item: any,
-      context: { offline: OfflineSyncState }
+      context: { offlineSync: OfflineSyncState }
     ) => OfflineAction;
   };
   offlineActionTracker: {

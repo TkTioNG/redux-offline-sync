@@ -1,15 +1,19 @@
-import type { OfflineAction } from '../types';
+import type { Config, OfflineAction } from '../types';
 
-export function NetworkError(response: any | string, status: number) {
-  this.name = 'NetworkError';
-  this.status = status;
-  this.response = response;
+interface NetworkError {
+  name: string;
+  status: number;
+  response: any;
 }
 
-// $FlowFixMe
-NetworkError.prototype = Error.prototype;
+interface NetworkErrorConstructor {
+  new (response: any, status: number): NetworkError;
+  readonly prototype: Error;
+}
 
-const tryParseJSON = (json: string): ?{} => {
+export declare const NetworkError: NetworkError & NetworkErrorConstructor;
+
+const tryParseJSON = (json: string) => {
   if (!json) {
     return null;
   }
@@ -20,7 +24,7 @@ const tryParseJSON = (json: string): ?{} => {
   }
 };
 
-const getResponseBody = (res: any): Promise<{} | string> => {
+const getResponseBody = (res: Response): Promise<any> => {
   const contentType = res.headers.get('content-type') || false;
   if (contentType && contentType.indexOf('json') >= 0) {
     return res.text().then(tryParseJSON);
@@ -28,9 +32,9 @@ const getResponseBody = (res: any): Promise<{} | string> => {
   return res.text();
 };
 
-export const getHeaders = (headers: {
-  [string]: string;
-}): { [string]: string } => {
+export const getHeaders = (
+  headers: Record<string, string>
+): Record<string, string> => {
   const {
     'Content-Type': contentTypeCapitalized,
     'content-type': contentTypeLowerCase,
@@ -41,7 +45,7 @@ export const getHeaders = (headers: {
   return { ...restOfHeaders, 'content-type': contentType };
 };
 
-export const getFormData = (object: {}) => {
+export const getFormData = (object: Record<string, any>) => {
   const formData = new FormData();
   Object.keys(object).forEach((key) => {
     Object.keys(object[key]).forEach((innerObj) => {
@@ -53,8 +57,11 @@ export const getFormData = (object: {}) => {
   return formData;
 };
 
-// eslint-disable-next-line no-unused-vars
-export default (effect: any, _action: OfflineAction): Promise<any> => {
+const effectCaller: Config['effect'] = (
+  effect: any,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  action: OfflineAction
+): Promise<any> => {
   const { url, json, ...options } = effect;
   const headers = getHeaders(options.headers);
 
@@ -73,7 +80,7 @@ export default (effect: any, _action: OfflineAction): Promise<any> => {
       return Promise.reject(e);
     }
   }
-  return fetch(url, { ...options, headers }).then((res) => {
+  return fetch(url, { ...options, headers }).then((res: Response) => {
     if (res.ok) {
       return getResponseBody(res);
     }
@@ -82,3 +89,5 @@ export default (effect: any, _action: OfflineAction): Promise<any> => {
     });
   });
 };
+
+export default effectCaller;

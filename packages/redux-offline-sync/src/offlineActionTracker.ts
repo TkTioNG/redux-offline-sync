@@ -5,9 +5,9 @@ const subscriptions: Record<
   { resolve: (value: any) => void; reject: (error: any) => void }
 > = {};
 
-function registerAction(syncUuid: string) {
+function registerAction(syncUuid: string | undefined) {
   return new Promise((resolve, reject) => {
-    subscriptions[syncUuid] = { resolve, reject };
+    subscriptions[syncUuid as string] = { resolve, reject };
   });
 }
 
@@ -27,10 +27,10 @@ function rejectAction(syncUuid: string, error: any) {
   }
 }
 
-const offlineActionTracker = {
+const offlineActionTracker: Config['offlineActionTracker'] = {
   registerAction,
   resolveAction,
   rejectAction,
-} as Config['offlineActionTracker'];
+};
 
 export default offlineActionTracker;

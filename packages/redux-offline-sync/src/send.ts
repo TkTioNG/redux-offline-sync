@@ -53,7 +53,7 @@ const send = (
   config: Config,
   retries: number = 0
 ) => {
-  const offlineSyncMetadata = action.offlineSyncMeta.offline;
+  const offlineSyncMetadata = action.offlineSyncMeta.offlineSync;
   dispatch(busy(true));
   return config
     .effect(offlineSyncMetadata.effect, action)

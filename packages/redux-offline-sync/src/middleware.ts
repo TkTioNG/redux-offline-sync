@@ -1,4 +1,4 @@
-import type { Store } from 'redux';
+import type { Middleware } from 'redux';
 import type {
   AppState,
   Config,
@@ -14,40 +14,46 @@ const after = (timeout = 0) =>
   new Promise((resolve) => setTimeout(resolve, timeout));
 
 export const createOfflineSyncMiddleware =
-  <S extends Store, A extends PossibleOfflineSyncAction>(config: Config) =>
-  (store: S) =>
-  (next: any) =>
-  (action: A) => {
+  (config: Config): Middleware =>
+  (store) =>
+  (next) =>
+  // @ts-expect-error Action being considered as unknown
+  (action: PossibleOfflineSyncAction) => {
+    console.log(action);
     // allow other middleware to do their things
     const result = next(action);
     let promise;
 
     // find any actions to send, if any
     const state: AppState = store.getState();
-    const offline = state.offline;
-    const context = { offline };
-    const offlineAction = config.queue.peek(offline.outbox, action, context);
+    const offlineSync = state.offlineSync;
+    const context = { offlineSync };
+    const offlineAction = config.queue.peek(
+      offlineSync.outbox,
+      action,
+      context
+    );
 
     // create promise to return on enqueue offline action
     if (
       action.offlineSyncMeta &&
-      (action as OfflineAction).offlineSyncMeta.offline
+      (action as OfflineAction).offlineSyncMeta.offlineSync
     ) {
       const { registerAction } = config.offlineActionTracker;
       // registerAction(offline.lastSyncUuid);
       // promise = offline.lastSyncUuid // to return previous syncUuid to keep track
-      promise = registerAction(offline.lastSyncUuid);
+      promise = registerAction(offlineSync.lastSyncUuid);
     }
 
     // if there are any actions in the queue that we are not
     // yet processing, send those actions
     if (
       offlineAction &&
-      !offline.busy &&
-      !offline.retryScheduled &&
-      offline.netInfo.online
+      !offlineSync.busy &&
+      !offlineSync.retryScheduled &&
+      offlineSync.netInfo.isConnected
     ) {
-      send(offlineAction, store.dispatch, config, offline.retryCount);
+      send(offlineAction, store.dispatch, config, offlineSync.retryCount);
     }
 
     if (action.type === OFFLINE_SCHEDULE_RETRY) {
@@ -56,8 +62,8 @@ export const createOfflineSyncMiddleware =
       });
     }
 
-    if (action.type === OFFLINE_SEND && offlineAction && !offline.busy) {
-      send(offlineAction, store.dispatch, config, offline.retryCount);
+    if (action.type === OFFLINE_SEND && offlineAction && !offlineSync.busy) {
+      send(offlineAction, store.dispatch, config, offlineSync.retryCount);
     }
 
     return promise || result;

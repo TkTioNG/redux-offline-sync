@@ -22,12 +22,12 @@ export const scheduleRetry = (delay = 0) => ({
   },
 });
 
-export const completeRetry = (action) => ({
+export const completeRetry = (action: any) => ({
   type: OFFLINE_COMPLETE_RETRY,
   payload: action,
 });
 
-export const busy = (isBusy) => ({
+export const busy = (isBusy: boolean) => ({
   type: OFFLINE_BUSY,
   payload: { busy: isBusy },
 });

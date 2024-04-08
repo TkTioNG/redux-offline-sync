@@ -23,9 +23,9 @@ export const initialState: OfflineSyncState = {
   retryCount: 0,
   retryScheduled: false,
   netInfo: {
-    online: false,
+    isConnected: false,
+    type: 'none',
     isConnectionExpensive: undefined,
-    reach: 'NONE',
   },
 };
 
@@ -48,7 +48,7 @@ export const buildOfflineUpdater = (dequeue: Dequeue, enqueue: Enqueue) =>
     if (action.type === PERSIST_REHYDRATE && action.payload) {
       return {
         ...state,
-        ...(action.payload.offline || {}),
+        ...(action.payload.offlineSync || {}),
         netInfo: state.netInfo,
         retryScheduled: initialState.retryScheduled,
         retryCount: initialState.retryCount,
@@ -81,26 +81,28 @@ export const buildOfflineUpdater = (dequeue: Dequeue, enqueue: Enqueue) =>
 
     // Add offline actions to queue
     if (action.offlineSyncMeta) {
-      if ((action as OfflineAction).offlineSyncMeta.offline) {
+      if ((action as OfflineAction).offlineSyncMeta.offlineSync) {
         const syncUuid = uuidv4();
         const stamped = {
           ...action,
           offlineSyncMeta: { ...action.offlineSyncMeta, syncUuid },
         } as OfflineAction;
-        const offline = state;
+        const offlineSync = state;
         return {
           ...state,
           lastSyncUuid: syncUuid,
-          outbox: enqueue(offline.outbox, stamped, { offline }),
+          outbox: enqueue(offlineSync.outbox, stamped, { offlineSync }),
         };
       }
 
       // Remove completed actions from queue (success or fail)
       if ((action as ResultAction).offlineSyncMeta.completed) {
-        const offline = state;
+        const offlineSync = state;
         return {
           ...state,
-          outbox: dequeue(offline.outbox, action as ResultAction, { offline }),
+          outbox: dequeue(offlineSync.outbox, action as ResultAction, {
+            offlineSync,
+          }),
           retryCount: 0,
         };
       }

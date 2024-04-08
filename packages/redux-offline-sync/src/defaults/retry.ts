@@ -1,5 +1,4 @@
-// @flow
-import type { OfflineAction } from '../types';
+import type { Config, OfflineAction } from '../types';
 
 const decaySchedule = [
   1000, // After 1 seconds
@@ -14,5 +13,12 @@ const decaySchedule = [
   1000 * 60 * 60, // After 1 hour
 ];
 
-export default (action: OfflineAction, retries: number): ?number =>
-  decaySchedule[retries] || null;
+const retryCaller: Config['retry'] = (
+  action: OfflineAction,
+  retries: number
+): number =>
+  retries >= decaySchedule.length
+    ? decaySchedule[decaySchedule.length - 1]
+    : decaySchedule[retries];
+
+export default retryCaller;

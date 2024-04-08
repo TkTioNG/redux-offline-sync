@@ -9,9 +9,9 @@ export const createOfflineSync = (userConfig: Partial<Config> = {}) => {
   const config = applyDefaults(userConfig);
 
   const offlineSyncEnhancer: StoreEnhancer =
-    (next) => (reducer, preloadedState) => {
+    (createStore) => (reducer, preloadedState) => {
       // create store
-      const store = next(reducer, preloadedState);
+      const store = createStore(reducer, preloadedState);
 
       // launch network detector
       if (config.detectNetwork) {
@@ -25,7 +25,7 @@ export const createOfflineSync = (userConfig: Partial<Config> = {}) => {
     };
 
   return {
-    middleware: createOfflineSyncMiddleware(config),
+    offlineSyncMiddleware: createOfflineSyncMiddleware(config),
     offlineSyncReducer(reducer: Reducer) {
       return offlineSyncReducer(reducer, config);
     },

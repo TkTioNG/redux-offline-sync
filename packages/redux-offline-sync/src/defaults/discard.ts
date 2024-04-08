@@ -1,10 +1,11 @@
-import type { OfflineAction } from '../types';
+import type { Config, OfflineAction } from '../types';
 import { NetworkError } from './effect';
 
-export default (
+const discard: Config['discard'] = (
   error: typeof NetworkError,
   action: OfflineAction,
-  _retries: number = 0 // eslint-disable-line no-unused-vars
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  retries: number = 0
 ): boolean => {
   // not a network error -> discard
   if (!('status' in error)) {
@@ -12,6 +13,7 @@ export default (
   }
 
   // discard http 4xx errors
-  // $FlowFixMe
   return error.status >= 400 && error.status < 500;
 };
+
+export default discard;
