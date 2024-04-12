@@ -40,7 +40,7 @@ function setupStore() {
         },
       }).concat(offlineSyncMiddleware, sagaMiddleware),
     enhancers: (getDefaultEnhancer) =>
-      getDefaultEnhancer().concat(offlineSyncEnhancer),
+      getDefaultEnhancer().prepend(offlineSyncEnhancer),
   });
 
   const persistor = persistStore(store);

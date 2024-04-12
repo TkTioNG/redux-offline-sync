@@ -11,9 +11,9 @@ export default function RequestsQueue() {
   return (
     <ul>
       {outbox?.map((action) => (
-        <li key={action.offlineSyncMeta.syncUuid}>
+        <li key={action.meta.offlineSync.syncUuid}>
           <span>{action.type}</span>
-          <span>#{action.offlineSyncMeta.syncUuid}</span>
+          <span>#{action.meta.offlineSync.syncUuid}</span>
         </li>
       ))}
     </ul>

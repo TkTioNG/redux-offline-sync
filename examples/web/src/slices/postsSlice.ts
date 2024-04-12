@@ -1,4 +1,5 @@
 import { PayloadAction, createSlice } from '@reduxjs/toolkit';
+import { OfflineAction, OfflineResultMeta } from 'redux-offline-sync/src/types';
 
 export interface PostsState {
   postIds: string[];
@@ -26,20 +27,47 @@ export const GET_POSTS_ERROR = `${GET_POSTS}Error`;
 const postsSlice = createSlice({
   name: POSTS,
   initialState: initialState,
-  reducers: {
-    getPostsActionSuccess: (state: PostsState, action: PayloadAction<any>) => {
-      state.postIds = action.payload.postIds;
-      state.posts = Object.fromEntries(
-        action.payload.posts.map((post: { id: string }) => [post.id, post])
-      );
-      state.status.posts = 2;
-    },
-  },
+  reducers: (create) => ({
+    getPostsActionSuccess: create.reducer(
+      // @ts-expect-error ignore it
+      (
+        state: PostsState,
+        action: PayloadAction<any, string, { offlineSync: OfflineResultMeta }>
+      ) => {
+        const syncUuid = action.meta.offlineSync.syncUuid;
+        state.postIds = [...state.postIds, syncUuid];
+        state.posts = {
+          ...state.posts,
+          [syncUuid]: {
+            ...action.payload,
+            id: syncUuid,
+          },
+        };
+        state.status.posts = 2;
+      }
+    ),
+  }),
 });
 
-const getPostsAction = () => ({
-  type: GET_POSTS_REQUESTED,
-});
+const getPostsAction = (type: number): OfflineAction => {
+  let url = 'http://localhost:4000/succeed-always/?slow=true';
+  if (type === 1) {
+    url = 'http://localhost:4000/succeed-sometimes/?slow=true';
+  } else if (type === 2) {
+    url = 'http://localhost:4000/fail-sometimes/?slow=true';
+  }
+  return {
+    type: GET_POSTS_REQUESTED,
+    meta: {
+      offlineSync: {
+        effect: {
+          url,
+        },
+        commit: GET_POSTS_SUCCESS,
+      },
+    },
+  };
+};
 
 const { getPostsActionSuccess } = postsSlice.actions;
 

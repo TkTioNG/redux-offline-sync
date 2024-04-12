@@ -1,19 +1,24 @@
-import { PayloadAction } from '@reduxjs/toolkit';
-import { put, takeEvery } from 'redux-saga/effects';
+import { takeEvery } from 'redux-saga/effects';
 import {
+  GET_POSTS_ERROR,
   GET_POSTS_REQUESTED,
-  getPostsActionSuccess,
+  GET_POSTS_SUCCESS,
 } from '../slices/postsSlice';
+import {
+  getOfflineCommitType,
+  getOfflineQueueType,
+  getOfflineRollbackType,
+} from 'redux-offline-sync';
 
-// function* getPostsSaga(action: PayloadAction<any>) {
-//   console.log(action);
-//   const posts = [{ id: 1, message: 'banana' }];
-//   const postIds = posts.map((post) => post.id);
-//   yield put(
-//     getPostsActionSuccess({ postIds, posts: [{ id: 1, message: 'banana' }] })
-//   );
-// }
+function* getPostsSaga(action: { type: string }) {
+  yield console.log(`Called - ${action.type}`);
+}
 
 export default function* watchPosts() {
   yield takeEvery(GET_POSTS_REQUESTED, getPostsSaga);
+  yield takeEvery(GET_POSTS_SUCCESS, getPostsSaga);
+  yield takeEvery(GET_POSTS_ERROR, getPostsSaga);
+  yield takeEvery(getOfflineQueueType(GET_POSTS_REQUESTED), getPostsSaga);
+  yield takeEvery(getOfflineCommitType(GET_POSTS_REQUESTED), getPostsSaga);
+  yield takeEvery(getOfflineRollbackType(GET_POSTS_REQUESTED), getPostsSaga);
 }

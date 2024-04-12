@@ -10,19 +10,19 @@ const MakeRequests = ({
 }) => {
   const dispatch = useDispatch();
 
-  const makeRequest = (actionCaller: any) => {
-    const result = dispatch(actionCaller());
+  const makeRequest = (action: any) => {
+    const result = dispatch(action);
     console.log(result);
     if (!result.then) {
-      alert('Offline config returnPromises is false!');
+      // alert('Offline config returnPromises is false!');
       return result;
     }
     return result.then(successCallback).catch(errorCallback);
   };
 
-  const onSucceedAlways = () => makeRequest(getPostsAction);
-  const onSucceedSometimes = () => makeRequest(getPostsAction);
-  const onFailSometimes = () => makeRequest(getPostsAction);
+  const onSucceedAlways = () => makeRequest(getPostsAction(0));
+  const onSucceedSometimes = () => makeRequest(getPostsAction(1));
+  const onFailSometimes = () => makeRequest(getPostsAction(2));
 
   return (
     <div>
