@@ -1,11 +1,11 @@
 import { Action, Reducer, UnknownAction } from 'redux';
-import { v4 as uuidv4 } from 'uuid';
 import type {
   OfflineSyncState,
   ResultAction,
   Config,
   OfflineAction,
   PossibleOfflineSyncAction,
+  OfflineQueueAction,
 } from './types';
 import {
   OFFLINE_STATUS_CHANGED,
@@ -14,6 +14,7 @@ import {
   OFFLINE_BUSY,
   RESET_STATE,
   PERSIST_REHYDRATE,
+  OFFLINE_ACTION_QUEUED,
 } from './constants';
 
 export const initialState: OfflineSyncState = {
@@ -37,6 +38,14 @@ export const buildOfflineUpdater = (dequeue: Dequeue, enqueue: Enqueue) =>
     state: OfflineSyncState | undefined = initialState,
     action: PossibleOfflineSyncAction
   ): OfflineSyncState {
+    if (action.type === PERSIST_REHYDRATE) {
+      return {
+        ...state,
+        ...action.payload.offlineSync,
+        busy: false,
+      };
+    }
+
     // Update online/offline status
     if (action.type === OFFLINE_STATUS_CHANGED) {
       return {
@@ -80,23 +89,24 @@ export const buildOfflineUpdater = (dequeue: Dequeue, enqueue: Enqueue) =>
     }
 
     // Add offline actions to queue
-    if (action.offlineSyncMeta) {
-      if ((action as OfflineAction).offlineSyncMeta.offlineSync) {
-        const syncUuid = uuidv4();
-        const stamped = {
-          ...action,
-          offlineSyncMeta: { ...action.offlineSyncMeta, syncUuid },
-        } as OfflineAction;
+    if ((action as OfflineAction).meta?.offlineSync) {
+      if (
+        (action as OfflineQueueAction).meta.offlineSync.type ===
+        OFFLINE_ACTION_QUEUED
+      ) {
         const offlineSync = state;
         return {
           ...state,
-          lastSyncUuid: syncUuid,
-          outbox: enqueue(offlineSync.outbox, stamped, { offlineSync }),
+          lastSyncUuid: (action as OfflineQueueAction).meta.offlineSync
+            .syncUuid,
+          outbox: enqueue(offlineSync.outbox, action as OfflineQueueAction, {
+            offlineSync,
+          }),
         };
       }
 
       // Remove completed actions from queue (success or fail)
-      if ((action as ResultAction).offlineSyncMeta.completed) {
+      if ((action as ResultAction).meta.offlineSync.completed) {
         const offlineSync = state;
         return {
           ...state,

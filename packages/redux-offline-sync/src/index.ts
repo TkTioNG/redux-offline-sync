@@ -1,7 +1,21 @@
 import { createOfflineSync } from './createOfflineSync';
+import {
+  getOfflineCommitType,
+  getOfflineQueueType,
+  getOfflineRollbackType,
+} from './utils';
 
-import type { OfflineSyncState } from './types';
+import type {
+  OfflineSyncState,
+  OfflineActionMeta,
+  OfflineResultMeta,
+} from './types';
 
-export { createOfflineSync };
+export {
+  createOfflineSync,
+  getOfflineCommitType,
+  getOfflineQueueType,
+  getOfflineRollbackType,
+};
 
-export type { OfflineSyncState };
+export type { OfflineSyncState, OfflineActionMeta, OfflineResultMeta };

@@ -6,21 +6,32 @@ import {
   OFFLINE_BUSY,
 } from './constants';
 
+export type OfflineActionMeta = {
+  effect: any;
+  commit?: string;
+  rollback?: string;
+};
+
+type OfflineQueueMeta = OfflineActionMeta & {
+  type: string;
+  originalType?: string;
+  syncUuid: string;
+};
+
+export type OfflineResultMeta = {
+  success: boolean;
+  completed: boolean;
+  error?: Error | unknown;
+  originalType?: string;
+  syncUuid: string;
+};
+
 export type ResultAction = {
   type: string;
   payload?: any;
-  offlineSyncMeta: {
-    // offline?: any;
-    success: boolean;
-    completed: boolean;
-    error?: Error | unknown;
+  meta: {
+    offlineSync: OfflineResultMeta;
   };
-};
-
-export type OfflineMetadata = {
-  effect: any;
-  commit?: ResultAction;
-  rollback?: ResultAction;
 };
 
 // User passed action
@@ -29,9 +40,17 @@ export type OfflineMetadata = {
 export type OfflineAction = {
   type: string;
   payload?: any;
-  offlineSyncMeta: {
-    syncUuid: string;
-    offlineSync: OfflineMetadata;
+  meta: {
+    offlineSync: OfflineActionMeta;
+  };
+};
+
+// Queue action
+export type OfflineQueueAction = {
+  type: string;
+  payload?: any;
+  meta: {
+    offlineSync: OfflineQueueMeta;
   };
 };
 
@@ -46,7 +65,9 @@ export type OfflineStatusChangeAction = {
   payload: {
     netInfo: NetInfo;
   };
-  offlineSyncMeta: undefined;
+  meta?: {
+    offlineSync: undefined;
+  };
 };
 
 export type OfflineScheduleRetryAction = {
@@ -54,7 +75,9 @@ export type OfflineScheduleRetryAction = {
   payload: {
     delay: number;
   };
-  offlineSyncMeta: undefined;
+  meta?: {
+    offlineSync: undefined;
+  };
 };
 
 export type OfflineBusyAction = {
@@ -62,7 +85,9 @@ export type OfflineBusyAction = {
   payload: {
     busy: boolean;
   };
-  offlineSyncMeta: undefined;
+  meta?: {
+    offlineSync: undefined;
+  };
 };
 
 export type PossibleOfflineSyncAction =
@@ -71,10 +96,11 @@ export type PossibleOfflineSyncAction =
   | OfflineBusyAction
   | ResultAction
   | OfflineAction
+  | OfflineQueueAction
   | PersistRehydrateAction
   | UnknownAction;
 
-export type Outbox = Array<OfflineAction>;
+export type Outbox = Array<OfflineQueueAction>;
 
 export type OfflineSyncState = {
   busy: boolean;
@@ -90,7 +116,9 @@ export type PersistRehydrateAction = {
   payload: {
     offlineSync: OfflineSyncState;
   };
-  offlineSyncMeta: undefined;
+  meta?: {
+    offlineSync: undefined;
+  };
 };
 
 export type AppState = {
@@ -106,20 +134,20 @@ export interface Config {
   discard: (error: any, action: OfflineAction, retries: number) => boolean;
   queue: {
     enqueue: (
-      array: Array<OfflineAction>,
-      item: OfflineAction,
+      array: Array<OfflineQueueAction>,
+      item: OfflineQueueAction,
       context: { offlineSync: OfflineSyncState }
-    ) => Array<OfflineAction>;
+    ) => Array<OfflineQueueAction>;
     dequeue: (
-      array: Array<OfflineAction>,
+      array: Array<OfflineQueueAction>,
       item: ResultAction,
       context: { offlineSync: OfflineSyncState }
-    ) => Array<OfflineAction>;
+    ) => Array<OfflineQueueAction>;
     peek: (
-      array: Array<OfflineAction>,
+      array: Array<OfflineQueueAction>,
       item: any,
       context: { offlineSync: OfflineSyncState }
-    ) => OfflineAction;
+    ) => OfflineQueueAction;
   };
   offlineActionTracker: {
     registerAction: (

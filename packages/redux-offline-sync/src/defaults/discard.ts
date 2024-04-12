@@ -2,7 +2,7 @@ import type { Config, OfflineAction } from '../types';
 import { NetworkError } from './effect';
 
 const discard: Config['discard'] = (
-  error: typeof NetworkError,
+  error: NetworkError,
   action: OfflineAction,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   retries: number = 0

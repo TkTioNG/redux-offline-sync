@@ -1,4 +1,5 @@
 import { Config } from './types';
+import { serializeError } from './utils';
 
 const subscriptions: Record<
   string,
@@ -22,7 +23,11 @@ function resolveAction(syncUuid: string, value: any) {
 function rejectAction(syncUuid: string, error: any) {
   const subscription = subscriptions[syncUuid];
   if (subscription) {
-    subscription.reject(error);
+    if (error instanceof Error) {
+      subscription.reject(serializeError(error));
+    } else {
+      subscription.reject(error);
+    }
     delete subscriptions[syncUuid];
   }
 }

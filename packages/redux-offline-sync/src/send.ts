@@ -1,6 +1,11 @@
 import { busy, scheduleRetry } from './actions';
 import { JS_ERROR } from './constants';
-import type { Config, OfflineAction, ResultAction } from './types';
+import type { Config, OfflineQueueAction, ResultAction } from './types';
+import {
+  getOfflineCommitType,
+  getOfflineRollbackType,
+  serializeError,
+} from './utils';
 
 type CompleteSuccessResult = {
   success: true;
@@ -14,56 +19,81 @@ type CompleteFailResult = {
 
 interface CompleteAction {
   type: string;
-  offlineSyncMeta: {
-    offlineAction: OfflineAction;
+  meta: {
+    offlineSync: {
+      syncUuid: string;
+    };
   };
 }
 
 const complete = (
   action: CompleteAction /** @todo Check DefaultAction | ResultAction */,
   result: CompleteSuccessResult | CompleteFailResult,
-  offlineAction: OfflineAction,
+  offlineAction: OfflineQueueAction,
   config: Config
 ): ResultAction => {
   const { resolveAction, rejectAction } = config.offlineActionTracker;
   if (result.success) {
-    resolveAction(offlineAction.offlineSyncMeta.syncUuid, result.payload);
+    resolveAction(
+      offlineAction.meta.offlineSync.syncUuid as string,
+      result.payload
+    );
   } else if (result.payload) {
-    rejectAction(offlineAction.offlineSyncMeta.syncUuid, result.payload);
+    rejectAction(
+      offlineAction.meta.offlineSync.syncUuid as string,
+      result.payload
+    );
   }
   return {
     ...action,
     payload: result.payload,
-    offlineSyncMeta: {
-      ...action.offlineSyncMeta,
-      success: result.success,
-      completed: true,
+    meta: {
+      ...action.meta,
+      offlineSync: {
+        ...action.meta.offlineSync,
+        originalType: offlineAction.meta.offlineSync.originalType,
+        success: result.success,
+        completed: true,
+      },
     },
   };
 };
 
-const handleJsError = (error: Error | undefined | unknown): ResultAction => ({
+const handleJsError = (
+  error: Error | undefined | unknown,
+  syncUuid: string
+): ResultAction => ({
   type: JS_ERROR,
-  offlineSyncMeta: { error, success: false, completed: true },
+  meta: {
+    offlineSync: {
+      error: error instanceof Error ? serializeError(error) : error,
+      success: false,
+      completed: true,
+      syncUuid,
+    },
+  },
 });
 
 const send = (
-  action: OfflineAction,
+  action: OfflineQueueAction,
   dispatch: (...any: any[]) => any,
   config: Config,
   retries: number = 0
 ) => {
-  const offlineSyncMetadata = action.offlineSyncMeta.offlineSync;
+  const offlineSyncMetadata = action.meta.offlineSync;
   dispatch(busy(true));
   return config
     .effect(offlineSyncMetadata.effect, action)
     .then((result) => {
       const commitAction = {
-        type: `${action.type}_COMMIT`,
-        // ...config.defaultCommit,
-        offlineSyncMeta: {
-          // ...config.defaultCommit.offlineSyncMeta,
-          offlineAction: action,
+        type:
+          offlineSyncMetadata.commit ??
+          getOfflineCommitType(offlineSyncMetadata.originalType ?? action.type),
+        meta: {
+          ...action.meta,
+          offlineSync: {
+            syncUuid: offlineSyncMetadata.syncUuid as string,
+          },
         },
       };
       try {
@@ -76,16 +106,23 @@ const send = (
           )
         );
       } catch (error) {
-        return dispatch(handleJsError(error));
+        return dispatch(
+          handleJsError(error, offlineSyncMetadata.syncUuid as string)
+        );
       }
     })
     .catch(async (error) => {
       const rollbackAction = {
-        type: `${action.type}_ROLLBACK`,
-        // ...config.defaultRollback,
-        offlineSyncMeta: {
-          // ...config.defaultRollback.offlineSyncMeta,
-          offlineAction: action,
+        type:
+          offlineSyncMetadata.rollback ??
+          getOfflineRollbackType(
+            offlineSyncMetadata.originalType ?? action.type
+          ),
+        meta: {
+          ...action.meta,
+          offlineSync: {
+            syncUuid: offlineSyncMetadata.syncUuid as string,
+          },
         },
       };
 
@@ -107,7 +144,10 @@ const send = (
       return dispatch(
         complete(
           rollbackAction,
-          { success: false, payload: error },
+          {
+            success: false,
+            payload: error instanceof Error ? serializeError(error) : error,
+          },
           action,
           config
         )

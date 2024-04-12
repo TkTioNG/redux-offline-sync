@@ -1,17 +1,16 @@
 import type { Config, OfflineAction } from '../types';
 
-interface NetworkError {
-  name: string;
+export class NetworkError extends Error {
   status: number;
   response: any;
-}
 
-interface NetworkErrorConstructor {
-  new (response: any, status: number): NetworkError;
-  readonly prototype: Error;
+  constructor(response: any, status: number) {
+    super();
+    this.name = 'NetworkError';
+    this.status = status;
+    this.response = { ...response };
+  }
 }
-
-export declare const NetworkError: NetworkError & NetworkErrorConstructor;
 
 const tryParseJSON = (json: string) => {
   if (!json) {
@@ -42,7 +41,10 @@ export const getHeaders = (
   } = headers || {};
   const contentType =
     contentTypeCapitalized || contentTypeLowerCase || 'application/json';
-  return { ...restOfHeaders, 'content-type': contentType };
+  return {
+    ...restOfHeaders,
+    'content-type': contentType,
+  };
 };
 
 export const getFormData = (object: Record<string, any>) => {
