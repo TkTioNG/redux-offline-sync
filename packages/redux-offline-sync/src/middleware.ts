@@ -1,13 +1,19 @@
 import type { Middleware } from 'redux';
+import { v4 as uuidv4 } from 'uuid';
 import type {
   AppState,
   Config,
   OfflineAction,
+  OfflineQueueAction,
   OfflineScheduleRetryAction,
   PossibleOfflineSyncAction,
 } from './types';
-import { OFFLINE_SEND, OFFLINE_SCHEDULE_RETRY } from './constants';
-import { completeRetry } from './actions';
+import {
+  OFFLINE_SEND,
+  OFFLINE_SCHEDULE_RETRY,
+  OFFLINE_ACTION_QUEUED,
+} from './constants';
+import { completeRetry, offlineQueued } from './actions';
 import send from './send';
 
 const after = (timeout = 0) =>
@@ -19,7 +25,6 @@ export const createOfflineSyncMiddleware =
   (next) =>
   // @ts-expect-error Action being considered as unknown
   (action: PossibleOfflineSyncAction) => {
-    console.log(action);
     // allow other middleware to do their things
     const result = next(action);
     let promise;
@@ -36,13 +41,20 @@ export const createOfflineSyncMiddleware =
 
     // create promise to return on enqueue offline action
     if (
-      action.offlineSyncMeta &&
-      (action as OfflineAction).offlineSyncMeta.offlineSync
+      action.meta &&
+      (action as OfflineAction).meta.offlineSync &&
+      (action as OfflineAction).meta.offlineSync.effect &&
+      (action as OfflineQueueAction).meta.offlineSync.type !==
+        OFFLINE_ACTION_QUEUED
     ) {
       const { registerAction } = config.offlineActionTracker;
-      // registerAction(offline.lastSyncUuid);
-      // promise = offline.lastSyncUuid // to return previous syncUuid to keep track
-      promise = registerAction(offlineSync.lastSyncUuid);
+      // registerAction(offlineSync.lastSyncUuid);
+      // promise = offlineSync.lastSyncUuid; // to return previous syncUuid to keep track
+      // promise = registerAction(offlineSync.lastSyncUuid);
+      const syncUuid = uuidv4();
+      registerAction(syncUuid);
+      store.dispatch(offlineQueued(syncUuid, action as OfflineAction));
+      promise = syncUuid; // to return previous syncUuid to keep track
     }
 
     // if there are any actions in the queue that we are not

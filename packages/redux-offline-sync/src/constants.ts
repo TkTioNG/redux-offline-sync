@@ -1,6 +1,7 @@
 export const OFFLINE_STATUS_CHANGED = '@offline-sync/STATUS_CHANGED';
 export const OFFLINE_SCHEDULE_RETRY = '@offline-sync/SCHEDULE_RETRY';
 export const OFFLINE_COMPLETE_RETRY = '@offline-sync/COMPLETE_RETRY';
+export const OFFLINE_ACTION_QUEUED = '@offline-sync/ACTION_QUEUE';
 export const OFFLINE_SEND = '@offline-sync/SEND';
 export const OFFLINE_BUSY = '@offline-sync/BUSY';
 export const RESET_STATE = '@offline-sync/RESET_STATE';
