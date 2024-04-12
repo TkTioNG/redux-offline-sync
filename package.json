@@ -6,6 +6,8 @@
   "scripts": {
     "website": "pnpm --filter website",
     "sync": "pnpm --filter redux-offline-sync",
+    "web": "pnpm --filter web",
+    "server": "pnpm --filter server",
     "test": "jest",
     "lint": "eslint \"**/*.{js,ts,tsx}\"",
     "release": "release-it"

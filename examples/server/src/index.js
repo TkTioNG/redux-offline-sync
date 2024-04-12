@@ -1,6 +1,9 @@
 import express from 'express';
+import cors from 'cors';
 
 const app = express();
+
+app.use(cors());
 
 app.use((req, _res, next) => {
   let timeoutFactor = 100;
@@ -18,7 +21,7 @@ app.get('/succeed-always', (_req, res) => {
 
 app.get('/succeed-sometimes', (_req, res) => {
   if (Math.random() < 0.5) {
-    res.status(500).send({ error: 'server error' });
+    res.status(400).send({ error: 'server error' });
   } else {
     res.status(200).send({ some: 'data OK' });
   }
