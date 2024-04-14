@@ -53,7 +53,7 @@ export const buildOfflineUpdater = ({
     if (action.type === PERSIST_REHYDRATE) {
       return {
         ...state,
-        ...action.payload.offlineSync,
+        ...action.payload?.offlineSync,
         busy: false,
       };
     }
