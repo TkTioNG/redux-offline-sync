@@ -22,6 +22,9 @@ interface CompleteAction {
   meta: {
     offlineSync: {
       syncUuid: string;
+      queueOn: number;
+      commitOn?: number;
+      rollbackOn?: number;
     };
   };
 }
@@ -61,7 +64,8 @@ const complete = (
 
 const handleJsError = (
   error: Error | undefined | unknown,
-  syncUuid: string
+  syncUuid: string,
+  queueOn?: number
 ): ResultAction => ({
   type: JS_ERROR,
   meta: {
@@ -70,6 +74,7 @@ const handleJsError = (
       success: false,
       completed: true,
       syncUuid,
+      queueOn: queueOn ?? Date.now(),
     },
   },
 });
@@ -93,6 +98,8 @@ const send = (
           ...action.meta,
           offlineSync: {
             syncUuid: offlineSyncMetadata.syncUuid as string,
+            queueOn: action.meta.offlineSync.queueOn,
+            commitOn: Date.now(),
           },
         },
       };
@@ -122,6 +129,8 @@ const send = (
           ...action.meta,
           offlineSync: {
             syncUuid: offlineSyncMetadata.syncUuid as string,
+            queueOn: action.meta.offlineSync.queueOn,
+            rollbackOn: Date.now(),
           },
         },
       };

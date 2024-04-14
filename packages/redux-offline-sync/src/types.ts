@@ -16,6 +16,7 @@ type OfflineQueueMeta = OfflineActionMeta & {
   type: string;
   originalType?: string;
   syncUuid: string;
+  queueOn: number;
 };
 
 export type OfflineResultMeta = {
@@ -24,6 +25,9 @@ export type OfflineResultMeta = {
   error?: Error | unknown;
   originalType?: string;
   syncUuid: string;
+  queueOn: number;
+  commitOn?: number;
+  rollbackOn?: number;
 };
 
 export type ResultAction = {

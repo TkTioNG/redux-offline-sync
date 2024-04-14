@@ -47,6 +47,7 @@ export const offlineQueued = (
       syncUuid,
       type: OFFLINE_ACTION_QUEUED,
       originalType: action.type,
+      queueOn: Date.now(),
     },
   },
 });
