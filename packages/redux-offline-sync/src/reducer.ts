@@ -21,6 +21,8 @@ export const initialState: OfflineSyncState = {
   busy: false,
   lastSyncUuid: undefined,
   outbox: [],
+  successBox: [],
+  failureBox: [],
   retryCount: 0,
   retryScheduled: false,
   netInfo: {
@@ -33,7 +35,17 @@ export const initialState: OfflineSyncState = {
 type Dequeue = Config['queue']['dequeue'];
 type Enqueue = Config['queue']['enqueue'];
 
-export const buildOfflineUpdater = (dequeue: Dequeue, enqueue: Enqueue) =>
+export const buildOfflineUpdater = ({
+  dequeue,
+  enqueue,
+  successBoxSize,
+  failureBoxSize,
+}: {
+  dequeue: Dequeue;
+  enqueue: Enqueue;
+  successBoxSize: Config['successBoxSize'];
+  failureBoxSize: Config['failureBoxSize'];
+}) =>
   function offlineSyncUpdater(
     state: OfflineSyncState | undefined = initialState,
     action: PossibleOfflineSyncAction
@@ -107,12 +119,23 @@ export const buildOfflineUpdater = (dequeue: Dequeue, enqueue: Enqueue) =>
 
       // Remove completed actions from queue (success or fail)
       if ((action as ResultAction).meta.offlineSync.completed) {
+        const isSuccess = (action as ResultAction).meta.offlineSync.success;
         const offlineSync = state;
         return {
           ...state,
           outbox: dequeue(offlineSync.outbox, action as ResultAction, {
             offlineSync,
           }),
+          successBox: isSuccess
+            ? [...offlineSync.successBox, action as ResultAction].slice(
+                -successBoxSize
+              )
+            : offlineSync.successBox,
+          failureBox: isSuccess
+            ? offlineSync.failureBox
+            : [...offlineSync.failureBox, action as ResultAction].slice(
+                -failureBoxSize
+              ),
           retryCount: 0,
         };
       }
@@ -126,7 +149,13 @@ export const offlineSyncReducer = <S, A extends Action = UnknownAction>(
   config: Config
 ): Reducer<S & { offlineSync?: OfflineSyncState }, A> => {
   const { dequeue, enqueue } = config.queue;
-  const offlineSyncUpdater = buildOfflineUpdater(dequeue, enqueue);
+  const { successBoxSize, failureBoxSize } = config;
+  const offlineSyncUpdater = buildOfflineUpdater({
+    dequeue,
+    enqueue,
+    successBoxSize,
+    failureBoxSize,
+  });
 
   return (
     state: (S & { offlineSync?: OfflineSyncState }) | undefined,

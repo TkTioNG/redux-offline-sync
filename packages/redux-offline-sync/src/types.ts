@@ -105,11 +105,14 @@ export type PossibleOfflineSyncAction =
   | UnknownAction;
 
 export type Outbox = Array<OfflineQueueAction>;
+export type ResultBox = Array<ResultAction>;
 
 export type OfflineSyncState = {
   busy: boolean;
   lastSyncUuid?: string;
   outbox: Outbox;
+  successBox: ResultBox;
+  failureBox: ResultBox;
   netInfo: NetInfo;
   retryCount: number;
   retryScheduled: boolean;
@@ -160,4 +163,6 @@ export interface Config {
     resolveAction: (syncUuid: string, payload: any) => void | (() => void);
     rejectAction: (syncUuid: string, payload: any) => void | (() => void);
   };
+  successBoxSize: number;
+  failureBoxSize: number;
 }

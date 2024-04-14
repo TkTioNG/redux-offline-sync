@@ -11,6 +11,8 @@ const defaultConfig: Omit<Config, 'offlineActionTracker'> = {
   retry,
   discard,
   queue,
+  successBoxSize: 50,
+  failureBoxSize: 50,
 };
 
 export default defaultConfig;

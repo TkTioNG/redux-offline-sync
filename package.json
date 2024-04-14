@@ -10,6 +10,7 @@
     "server": "pnpm --filter server",
     "test": "jest",
     "lint": "eslint \"**/*.{js,ts,tsx}\"",
+    "typecheck": "pnpm --filter redux-offline-sync tsc --noEmit",
     "release": "release-it"
   },
   "keywords": [
