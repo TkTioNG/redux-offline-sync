@@ -1,13 +1,13 @@
 import type {
   Config,
-  OfflineAction,
+  OfflineQueueAction,
   OfflineSyncState,
   ResultAction,
 } from '../types';
 
 function enqueue(
-  array: OfflineAction[],
-  item: OfflineAction,
+  array: OfflineQueueAction[],
+  item: OfflineQueueAction,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   context: { offlineSync: OfflineSyncState }
 ) {
@@ -15,7 +15,7 @@ function enqueue(
 }
 
 function dequeue(
-  array: OfflineAction[],
+  array: OfflineQueueAction[],
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   item: ResultAction,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -26,7 +26,7 @@ function dequeue(
 }
 
 function peek(
-  array: OfflineAction[],
+  array: OfflineQueueAction[],
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   item: any,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
