@@ -1,3 +1,5 @@
+import { v4 as uuidv4 } from 'uuid';
+
 import detectNetwork from './detectNetwork';
 import effect from './effect';
 import retry from './retry';
@@ -13,6 +15,7 @@ const defaultConfig: Omit<Config, 'offlineActionTracker'> = {
   queue,
   successBoxSize: 50,
   failureBoxSize: 50,
+  generateSyncUuid: () => uuidv4(),
 };
 
 export default defaultConfig;

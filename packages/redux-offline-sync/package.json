@@ -9,7 +9,8 @@
   ],
   "scripts": {
     "test": "jest",
-    "build": "tsc --build"
+    "build": "tsc --build",
+    "typecheck": "tsc --noEmit"
   },
   "keywords": [
     "react",
@@ -38,6 +39,9 @@
     "redux": ">=4"
   },
   "peerDependenciesMeta": {
+    "@react-native-community/netinfo": {
+      "optional": true
+    },
     "@types/react": {
       "optional": true
     },
@@ -48,9 +52,6 @@
       "optional": true
     },
     "react-native": {
-      "optional": true
-    },
-    "@react-native-community/netinfo": {
       "optional": true
     }
   },

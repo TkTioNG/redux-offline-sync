@@ -2,16 +2,15 @@
   "name": "redux-offline-sync-base",
   "version": "0.0.1",
   "description": "",
-  "private": "true",
   "scripts": {
-    "website": "pnpm --filter website",
-    "sync": "pnpm --filter redux-offline-sync",
-    "web": "pnpm --filter web",
-    "mobile": "pnpm --filter mobile",
-    "server": "pnpm --filter server",
+    "website": "yarn workspace website",
+    "sync": "yarn workspace redux-offline-sync",
+    "web": "yarn workspace web",
+    "mobile": "yarn workspace mobile",
+    "server": "yarn workspace server",
     "test": "jest",
     "lint": "eslint \"**/*.{js,ts,tsx}\"",
-    "typecheck": "pnpm --filter redux-offline-sync tsc --noEmit",
+    "typecheck": "yarn workspace redux-offline-sync typecheck",
     "release": "release-it"
   },
   "keywords": [
@@ -64,7 +63,11 @@
     "ts-jest": "^29.1.2",
     "typescript": "^5.3.3"
   },
-  "packageManager": "pnpm@8.15.6",
+  "packageManager": "yarn@4.1.1",
+  "workspaces": [
+    "packages/*",
+    "examples/*"
+  ],
   "publishConfig": {
     "access": "public",
     "registry": "https://registry.npmjs.org/"

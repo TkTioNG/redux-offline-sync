@@ -6,5 +6,5 @@
     "outDir": "dist",
     "sourceMap": true
   },
-  "exclude": ["node_modules", "**/node_modules/*", "tests", "typings", "dist"]
+  "exclude": ["node_modules", "**/node_modules/**", "tests", "typings", "dist"]
 }

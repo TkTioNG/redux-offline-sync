@@ -1,5 +1,4 @@
 import type { Middleware } from 'redux';
-import { v4 as uuidv4 } from 'uuid';
 import type {
   AppState,
   Config,
@@ -51,7 +50,7 @@ export const createOfflineSyncMiddleware =
       // registerAction(offlineSync.lastSyncUuid);
       // promise = offlineSync.lastSyncUuid; // to return previous syncUuid to keep track
       // promise = registerAction(offlineSync.lastSyncUuid);
-      const syncUuid = uuidv4();
+      const syncUuid = config.generateSyncUuid();
       registerAction(syncUuid);
       store.dispatch(offlineQueued(syncUuid, action as OfflineAction));
       promise = syncUuid; // to return previous syncUuid to keep track

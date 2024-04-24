@@ -3,12 +3,12 @@ pre-commit:
   commands:
     lint:
       glob: '*.{js,ts,jsx,tsx}'
-      run: pnpm eslint {staged_files} --fix
+      run: yarn eslint {staged_files} --fix
     types:
       glob: '*.{js,ts, jsx, tsx}'
-      run: pnpm typecheck
+      run: yarn typecheck
 commit-msg:
   parallel: true
   commands:
     commitlint:
-      run: pnpm commitlint --edit
+      run: yarn commitlint --edit

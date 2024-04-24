@@ -165,4 +165,5 @@ export interface Config {
   };
   successBoxSize: number;
   failureBoxSize: number;
+  generateSyncUuid: () => string;
 }
